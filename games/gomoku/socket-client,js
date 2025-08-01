@@ -1,12 +1,64 @@
-// 初始化
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue } from "firebase/database";
+class GameConnection {
+    constructor() {
+        this.socket = null;
+        this.roomId = new URLSearchParams(location.search).get('room');
+        this.init();
+    }
 
-const db = getDatabase();
-const gameRef = ref(db, 'games/gomoku/room1');
+    init() {
+        if (!this.roomId) {
+            console.log("本地模式运行");
+            return;
+        }
 
-// 监听对手落子
-onValue(gameRef, (snapshot) => {
-  const data = snapshot.val();
-  drawOpponentMove(data.x, data.y); 
-});
+        // 使用PeerJS实现P2P连接（需引入PeerJS库）
+        this.peer = new Peer();
+        
+        this.peer.on('open', (id) => {
+            console.log("我的Peer ID:", id);
+            
+            // 如果是房主（URL中有player=1参数）
+            if (new URLSearchParams(location.search).get('player') === '1') {
+                this.setupInviteButton(id);
+            } else {
+                this.connectToHost(this.roomId);
+            }
+        });
+
+        this.peer.on('connection', (conn) => {
+            conn.on('data', (data) => {
+                if (data.type === 'move') {
+                    window.gomokuGame.handleMove(data.x, data.y);
+                }
+            });
+        });
+    }
+
+    setupInviteButton(peerId) {
+        const btn = document.getElementById('invite-btn');
+        btn.onclick = () => {
+            const inviteLink = `${location.origin}/games/gomoku?room=${peerId}&player=2`;
+            navigator.clipboard.writeText(inviteLink)
+                .then(() => alert('邀请链接已复制！'));
+        };
+    }
+
+    connectToHost(hostId) {
+        const conn = this.peer.connect(hostId);
+        
+        conn.on('open', () => {
+            console.log("已连接到主机");
+            this.conn = conn;
+        });
+    }
+
+    sendMove(x, y) {
+        if (this.conn && this.conn.open) {
+            this.conn.send({ type: 'move', x, y });
+        }
+    }
+}
+
+// 全局初始化
+window.gameConnection = new GameConnection();
+window.gomokuGame = new Gomoku();

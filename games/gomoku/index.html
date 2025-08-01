@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <base href="/games/gomoku/" />
+    <title>联机五子棋</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>五子棋对战室 <span id="room-id"></span></h1>
+        <div class="status">当前玩家: <span id="current-player">黑棋</span></div>
+        <canvas id="board" width="450" height="450"></canvas>
+        <div class="controls">
+            <button id="invite-btn">复制邀请链接</button>
+            <div id="message"></div>
+        </div>
+    </div>
+    
+    <script src="gomoku.js"></script>
+    <script src="socket-client.js"></script>
+    <script>
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new Gomoku();
+            game.init();
+            
+            // 显示房间ID
+            const params = new URLSearchParams(location.search);
+            document.getElementById('room-id').textContent = params.get('room') || '本地模式';
+        });
+    </script>
+</body>
+</html>
