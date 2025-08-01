@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML编辑器 - 带预览和自动补全</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .editor-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .editor-panel, .preview-panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+        
+        .panel-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-clear {
+            background: #e74c3c;
+        }
+        
+        .btn-clear:hover {
+            background: #c0392b;
+        }
+        
+        .btn-save {
+            background: #2ecc71;
+        }
+        
+        .btn-save:hover {
+            background: #27ae60;
+        }
+        
+        .editor-content {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .CodeMirror {
+            height: 100%;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .preview-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            color: white;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 25px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: white;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .editor-container {
+                flex-direction: column;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-code"></i> HTML编辑器</h1>
+            <p>在左侧编写HTML代码，右侧实时预览结果。支持自动补全、语法高亮等功能。</p>
+        </header>
+        
+        <div class="editor-container">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <div class="panel-title">代码编辑器</div>
+                    <div class="controls">
+                        <button class="btn btn-clear"><i class="fas fa-trash"></i> 清除</button>
+                        <button class="btn btn-save"><i class="fas fa-save"></i> 保存</button>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <textarea id="html-editor">&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-CN"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;我的网页&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;h1&gt;欢迎使用HTML编辑器&lt;/h1&gt;
+        &lt;p&gt;这是一个示例网页，在左侧编辑代码，右侧查看实时预览效果。&lt;/p&gt;
+        
+        &lt;div class="card"&gt;
+            &lt;h2&gt;HTML编辑器功能&lt;/h2&gt;
+            &lt;ul&gt;
+                &lt;li&gt;实时预览HTML渲染结果&lt;/li&gt;
+                &lt;li&gt;智能代码自动补全&lt;/li&gt;
+                &lt;li&gt;语法高亮显示&lt;/li&gt;
+                &lt;li&gt;响应式设计&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="card"&gt;
+            &lt;h2&gt;开始创作&lt;/h2&gt;
+            &lt;p&gt;尝试修改左侧的HTML代码，立即查看效果！&lt;/p&gt;
+            &lt;button style="background:#3498db;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;"&gt;示例按钮&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+                </div>
+            </div>
+            
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <div class="panel-title">实时预览</div>
+                </div>
+                <div class="preview-content" id="preview">
+                    <!-- 预览内容将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <i class="fas fa-bolt"></i>
+                <h3>实时预览</h3>
+                <p>在您输入代码的同时，右侧预览区会立即显示HTML渲染效果，无需手动刷新。</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-magic"></i>
+                <h3>智能自动补全</h3>
+                <p>编辑器提供HTML标签、属性和CSS属性的自动补全建议，提高编码效率。</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-code"></i>
+                <h3>语法高亮</h3>
+                <p>代码根据语法结构以不同颜色显示，使代码结构更加清晰易读。</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-mobile-alt"></i>
+                <h3>响应式设计</h3>
+                <p>编辑器适配各种屏幕尺寸，在手机、平板和桌面设备上都能完美工作。</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 HTML编辑器 | 使用CodeMirror构建 | 支持所有现代浏览器</p>
+        </footer>
+    </div>
+
+    <!-- 引入CodeMirror库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+
+    <script>
+        // 初始化编辑器
+        const editor = CodeMirror.fromTextArea(document.getElementById('html-editor'), {
+            mode: 'htmlmixed',
+            theme: 'dracula',
+            lineNumbers: true,
+            autoCloseTags: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "'>'": function(cm) {
+                    cm.closeTag(cm, '>');
+                }
+            },
+            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            foldGutter: true,
+            lint: true
+        });
+        
+        // 获取预览区域
+        const preview = document.getElementById('preview');
+        
+        // 更新预览内容
+        function updatePreview() {
+            const code = editor.getValue();
+            preview.innerHTML = code;
+        }
+        
+        // 初始更新
+        updatePreview();
+        
+        // 监听编辑器的变化
+        editor.on('change', updatePreview);
+        
+        // 添加清除功能
+        document.querySelector('.btn-clear').addEventListener('click', function() {
+            if (confirm('确定要清除所有代码吗？')) {
+                editor.setValue('<!DOCTYPE html>\n<html>\n<head>\n\t<title>新文档</title>\n</head>\n<body>\n\t\n</body>\n</html>');
+                updatePreview();
+            }
+        });
+        
+        // 添加保存功能
+        document.querySelector('.btn-save').addEventListener('click', function() {
+            const code = editor.getValue();
+            const blob = new Blob([code], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'webpage.html';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+            alert('文件已保存为 webpage.html');
+        });
+        
+        // 添加自动补全功能
+        CodeMirror.commands.autocomplete = function(cm) {
+            const cur = cm.getCursor();
+            const token = cm.getTokenAt(cur);
+            
+            if (token.string && token.string.match(/^[a-zA-Z][a-zA-Z0-9]*$/) || token.type === "attribute") {
+                CodeMirror.showHint(cm, CodeMirror.hint.html);
+            } else {
+                CodeMirror.showHint(cm, CodeMirror.hint.anyword);
+            }
+        };
+    </script>
+</body>
+</html>

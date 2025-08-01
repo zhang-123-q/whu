@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏大全 - 所有游戏</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        .game-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        .game-info {
+            padding: 18px;
+        }
+        .game-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        .game-description {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #888;
+        }
+        .search-sort {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1300px;
+            margin: 0 auto 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .search-bar {
+            flex-grow: 1;
+            min-width: 300px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 1em;
+            outline: none;
+        }
+        .sort-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sort-options select {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        @media (max-width: 600px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+            .search-sort {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>游戏大全</h1>
+        <p>所有游戏一网打尽，随心选择</p>
+    </div>
+
+    <div class="search-sort">
+        <div class="search-bar">
+            <input type="text" placeholder="搜索游戏名称、类型或关键词...">
+        </div>
+        <div class="sort-options">
+            <span>排序:</span>
+            <select>
+                <option>最新添加</option>
+                <option>最受欢迎</option>
+                <option>名称(A-Z)</option>
+                <option>名称(Z-A)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <!-- 游戏1 -->
+        <a href="a.html" class="game-card">
+            <img src="img/1.PNG" alt="五子棋" class="game-image">
+            <div class="game-info">
+                <div class="game-title">五子棋</div>
+                <div class="game-description">在棋盘中下出战场尘土飞扬的感觉</div>
+                <div class="game-meta">
+                    <span>益智</span>
+                    <span>★4.8</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏2 -->
+        <a href="2.html" class="game-card">
+            <img src="img/2.PNG" alt="贪吃蛇" class="game-image">
+            <div class="game-info">
+                <div class="game-title">贪吃蛇</div>
+                <div class="game-description">控制蛇吃到最多的食物 </div>
+                <div class="game-meta">
+                    <span>益智</span>
+                    <span>★4.6</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏3 -->
+        <a href="马里奥/mario.html" class="game-card">
+            <img src="img/3.png" alt="马里奥" class="game-image">
+            <div class="game-info">
+                <div class="game-title">马里奥</div>
+                <div class="game-description">就是马里奥</div>
+                <div class="game-meta">
+                    <span>角色扮演</span>
+                    <span>★4.9</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏4 -->
+        <a href="mc.html" class="game-card">
+            <img src="img/4.png" alt="我的世界" class="game-image">
+            <div class="game-info">
+                <div class="game-title">我的世界2D版</div>
+                <div class="game-description">在沙盒世界中探索</div>
+                <div class="game-meta">
+                    <span>生存冒险</span>
+                    <span>★999999.99</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏5 -->
+        <a href="象棋/game.html" class="game-card">
+            <img src="img/5.png" alt="象棋" class="game-image">
+            <div class="game-info">
+                <div class="game-title">象棋</div>
+                <div class="game-description">就是象棋</div>
+                <div class="game-meta">
+                    <span>益智</span>
+                    <span>★4.7</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏6 -->
+        <a href="pac-man/index.html" class="game-card">
+            <img src="img/6.png" alt="吃豆人" class="game-image">
+            <div class="game-info">
+                <div class="game-title">吃豆人</div>
+                <div class="game-description">在残酷的自然环境中生存下来，寻找食物。</div>
+                <div class="game-meta">
+                    <span>生存冒险</span>
+                    <span>★4.8</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏7 -->
+        <a href="html5-fly/play.html" class="game-card">
+            <img src="html5-fly\splash_screen.jpg" alt="太空战舰" class="game-image">
+            <div class="game-info">
+                <div class="game-title">太空战舰</div>
+                <div class="game-description">指挥你的舰队在星际间征战，建立银河帝国。</div>
+                <div class="game-meta">
+                    <span>策略</span>
+                    <span>★4.6</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏8 -->
+        <a href="game8.html" class="game-card">
+            <img src="https://via.placeholder.com/400x200?text=暗影刺客" alt="暗影刺客" class="game-image">
+            <div class="game-info">
+                <div class="game-title">暗影刺客</div>
+                <div class="game-description">在黑暗中潜行，完成一系列高难度的刺杀任务。</div>
+                <div class="game-meta">
+                    <span>动作潜行</span>
+                    <span>★4.9</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏9 -->
+        <a href="game9.html" class="game-card">
+            <img src="https://via.placeholder.com/400x200?text=农场物语" alt="农场物语" class="game-image">
+            <div class="game-info">
+                <div class="game-title">农场物语</div>
+                <div class="game-description">经营你的农场，种植作物，饲养动物，享受田园生活。</div>
+                <div class="game-meta">
+                    <span>休闲模拟</span>
+                    <span>★4.7</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- 游戏10 -->
+        <a href="index.html" class="game-card">
+            <img src="https://via.placeholder.com/400x200?text=太空战舰" alt="太空战舰" class="game-image">
+            <div class="game-info">
+                <div class="game-title">太空战舰</div>
+                <div class="game-description">指挥你的舰队在星际间征战，建立银河帝国。</div>
+                <div class="game-meta">
+                    <span>策略</span>
+                    <span>★4.8</span>
+                </div>
+            </div>
+        </a>
+    </div>
+</body>
+<p align="center" style="line-height:30px">
+	<a href="111.asp" style="color:#008000;font-size:14px;text-decoration:none" target="_blank">流言</a>
+    <a href="1.asp" style="color:#008000;font-size:14px;text-decoration:none" target="_blank">简易计算器</a>
+	<a href="html.html" style="color:#008000;font-size:14px;text-decoration:none" target="_blank">网页编辑器</a>
+	<a href="password.html" style="color:#008000;font-size:14px;text-decoration:none" target="_blank">管理员入口</a>
+</p>
+</html>
