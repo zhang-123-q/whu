@@ -1,0 +1,5 @@
+# 五子棋游戏路由
+/games/gomoku/* /games/gomoku/index.html 200
+
+# 其他通用SPA路由（可选）
+/* /index.html 200
