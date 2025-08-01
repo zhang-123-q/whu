@@ -1,13 +1,12 @@
-// games/gomoku/socket-client.js
-const peer = new Peer();
-const conn = peer.connect('对方PeerID');
+// 初始化
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, onValue } from "firebase/database";
 
-conn.on('open', () => {
-  conn.send({type: 'move', x: 5, y: 3});
-});
+const db = getDatabase();
+const gameRef = ref(db, 'games/gomoku/room1');
 
-peer.on('connection', (conn) => {
-  conn.on('data', data => {
-    if(data.type === 'move') updateBoard(data.x, data.y);
-  });
+// 监听对手落子
+onValue(gameRef, (snapshot) => {
+  const data = snapshot.val();
+  drawOpponentMove(data.x, data.y); 
 });
