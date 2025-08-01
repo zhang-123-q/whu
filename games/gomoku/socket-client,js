@@ -1,0 +1,13 @@
+// games/gomoku/socket-client.js
+const peer = new Peer();
+const conn = peer.connect('对方PeerID');
+
+conn.on('open', () => {
+  conn.send({type: 'move', x: 5, y: 3});
+});
+
+peer.on('connection', (conn) => {
+  conn.on('data', data => {
+    if(data.type === 'move') updateBoard(data.x, data.y);
+  });
+});
