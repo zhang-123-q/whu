@@ -1,4 +1,7 @@
 // games/gomoku/gomoku.js
+window.onerror = function(message, source, lineno) {
+    alert(`JS错误: ${message}\n文件: ${source}\n行号: ${lineno}`);
+  };
 class Gomoku {
     constructor() {
       this.board = Array(15).fill().map(() => Array(15).fill(0));
