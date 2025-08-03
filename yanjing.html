@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>同步注视+随机移动的眼睛</title>
+    <title>三种眼型切换动画</title>
     <style>
         body {
             margin: 0;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #000;
@@ -16,18 +17,36 @@
             cursor: pointer;
         }
         
+        .controls {
+            position: absolute;
+            top: 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        .eye-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 1s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        
         .eye-container {
             display: flex;
             gap: 60px;
-            transform: translateY(80px);
+            transform: translateY(20px);
             animation: float 8s ease-in-out infinite;
         }
         
         .eye {
             width: 180px;
-            height: 90px;
+            height: 180px;
             background-color: white;
-            border-radius: 0 0 90px 90px;
+            border-radius: 50%;
             position: relative;
             overflow: hidden;
             box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
@@ -35,10 +54,26 @@
             transform: rotateZ(var(--eye-tilt));
         }
         
+        .eye.bottom-half {
+            height: 90px;
+            border-radius: 0 0 90px 90px;
+        }
+        
+        .eye.top-half {
+            height: 90px;
+            border-radius: 90px 90px 0 0;
+            transform: rotateZ(var(--eye-tilt)) translateY(-90px);
+        }
+        
         #eye1 { --eye-tilt: 10deg; }
         #eye2 { --eye-tilt: -10deg; }
         
         .eye.closed {
+            height: 8px;
+        }
+        
+        .eye.bottom-half.closed,
+        .eye.top-half.closed {
             height: 8px;
         }
         
@@ -61,17 +96,33 @@
             background-color: #000;
             bottom: -100%;
             left: 0;
-            border-radius: 0 0 90px 90px;
+            border-radius: 50%;
             transition: bottom 0.3s ease-out;
         }
         
-        .eye.closed .eyelid {
+        .eye.bottom-half .eyelid {
+            border-radius: 0 0 90px 90px;
+        }
+        
+        .eye.top-half .eyelid {
+            border-radius: 90px 90px 0 0;
+            bottom: auto;
+            top: -100%;
+        }
+        
+        .eye.closed .eyelid,
+        .eye.bottom-half.closed .eyelid {
             bottom: 0;
         }
         
+        .eye.top-half.closed .eyelid {
+            top: 0;
+            bottom: auto;
+        }
+        
         @keyframes float {
-            0%, 100% { transform: translateY(80px) rotate(0deg); }
-            50% { transform: translateY(90px) rotate(1deg); }
+            0%, 100% { transform: translateY(20px) rotate(0deg); }
+            50% { transform: translateY(30px) rotate(1deg); }
         }
         
         .click-indicator {
@@ -90,24 +141,96 @@
             0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; }
             100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
         }
+        
+        .key-hint {
+            position: absolute;
+            bottom: 20px;
+            color: rgba(255,255,255,0.7);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="eye-container">
-        <div class="eye" id="eye1">
-            <div class="pupil" id="pupil1"></div>
-            <div class="eyelid"></div>
+    <div class="controls">
+        <div>按 A 键: 圆形眼睛</div>
+        <div>按 S 键: 下半圆</div>
+        <div>按 D 键: 上半圆</div>
+    </div>
+    
+    <div class="eye-wrapper" id="eyeWrapper">
+        <div class="eye-container">
+            <div class="eye" id="eye1">
+                <div class="pupil" id="pupil1"></div>
+                <div class="eyelid"></div>
+            </div>
+            <div class="eye" id="eye2">
+                <div class="pupil" id="pupil2"></div>
+                <div class="eyelid"></div>
+            </div>
         </div>
-        <div class="eye" id="eye2">
-            <div class="pupil" id="pupil2"></div>
-            <div class="eyelid"></div>
-        </div>
+    </div>
+    
+    <div class="key-hint">
+        键盘控制:<br>
+        A - 圆形 | S - 下半圆 | D - 上半圆
     </div>
 
     <script>
         // 状态控制
         let isLookingAtClick = false;
         let movementTimeout;
+        let currentShape = 'circle'; // 'circle', 'bottom-half', 'top-half'
+        
+        // 切换眼睛形状
+        function setEyeShape(shape) {
+            currentShape = shape;
+            const eyes = document.querySelectorAll('.eye');
+            
+            eyes.forEach(eye => {
+                // 移除所有形状类
+                eye.classList.remove('bottom-half', 'top-half');
+                
+                // 设置新形状
+                switch(shape) {
+                    case 'circle':
+                        eye.style.height = '180px';
+                        eye.style.transform = 'rotateZ(var(--eye-tilt))';
+                        break;
+                    case 'bottom-half':
+                        eye.classList.add('bottom-half');
+                        eye.style.height = '90px';
+                        eye.style.transform = 'rotateZ(var(--eye-tilt))';
+                        break;
+                    case 'top-half':
+                        eye.classList.add('top-half');
+                        eye.style.height = '90px';
+                        eye.style.transform = 'rotateZ(var(--eye-tilt)) translateY(-90px)';
+                        break;
+                }
+            });
+        }
+        
+        // 键盘事件监听
+        function setupKeyboardControls() {
+            document.addEventListener('keydown', (e) => {
+                // 忽略重复按键
+                if(e.repeat) return;
+                
+                switch(e.key.toLowerCase()) {
+                    case 'a':
+                        setEyeShape('circle');
+                        break;
+                    case 's':
+                        setEyeShape('bottom-half');
+                        break;
+                    case 'd':
+                        setEyeShape('top-half');
+                        break;
+                }
+            });
+        }
         
         // 显示点击特效
         function showClickEffect(x, y) {
@@ -119,34 +242,65 @@
             setTimeout(() => effect.remove(), 1000);
         }
         
-        // 同步移动两只眼睛
+        // 计算移动限制范围
+        function getMoveRange() {
+            const maxX = window.innerWidth * 0.3;
+            const maxY = window.innerHeight * 0.3;
+            return { maxX, maxY };
+        }
+        
+        // 移动整个眼睛组
         function moveEyesTo(x, y) {
+            const wrapper = document.getElementById('eyeWrapper');
+            const { maxX, maxY } = getMoveRange();
+            
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            const moveX = (x - centerX) / centerX * maxX;
+            const moveY = (y - centerY) / centerY * maxY;
+            
+            wrapper.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+            movePupilsTo(x, y);
+        }
+        
+        // 移动瞳孔
+        function movePupilsTo(x, y) {
             const eye1 = document.getElementById('eye1');
             const eye2 = document.getElementById('eye2');
             const pupil1 = document.getElementById('pupil1');
             const pupil2 = document.getElementById('pupil2');
             
-            // 计算两只眼睛的中心位置
-            const rect1 = eye1.getBoundingClientRect();
-            const rect2 = eye2.getBoundingClientRect();
-            const center1 = { x: rect1.left + rect1.width/2, y: rect1.top + rect1.height/2 };
-            const center2 = { x: rect2.left + rect2.width/2, y: rect2.top + rect2.height/2 };
+            const wrapperRect = document.getElementById('eyeWrapper').getBoundingClientRect();
+            const eye1Rect = eye1.getBoundingClientRect();
+            const eye2Rect = eye2.getBoundingClientRect();
             
-            // 计算移动向量 (限制在眼白范围内)
-            const moveVector1 = calculateMoveVector(center1, x, y, rect1);
-            const moveVector2 = calculateMoveVector(center2, x, y, rect2);
+            const center1 = { 
+                x: wrapperRect.left + (eye1Rect.left - wrapperRect.left) + eye1Rect.width/2,
+                y: wrapperRect.top + (eye1Rect.top - wrapperRect.top) + eye1Rect.height/2
+            };
             
-            // 应用移动
+            const center2 = { 
+                x: wrapperRect.left + (eye2Rect.left - wrapperRect.left) + eye2Rect.width/2,
+                y: wrapperRect.top + (eye2Rect.top - wrapperRect.top) + eye2Rect.height/2
+            };
+            
+            // 根据眼睛形状调整瞳孔移动范围
+            let yMultiplier = 0.8;
+            if(currentShape === 'bottom-half') yMultiplier = 0.5;
+            if(currentShape === 'top-half') yMultiplier = 0.5;
+            
+            const moveVector1 = calculateMoveVector(center1, x, y, eye1Rect, yMultiplier);
+            const moveVector2 = calculateMoveVector(center2, x, y, eye2Rect, yMultiplier);
+            
             pupil1.style.transform = `translate(calc(-50% + ${moveVector1.x}px), calc(-50% + ${moveVector1.y}px))`;
             pupil2.style.transform = `translate(calc(-50% + ${moveVector2.x}px), calc(-50% + ${moveVector2.y}px))`;
         }
         
-        // 计算移动向量 (考虑眼睛倾斜角度)
-        function calculateMoveVector(eyeCenter, targetX, targetY, eyeRect) {
+        function calculateMoveVector(eyeCenter, targetX, targetY, eyeRect, yMultiplier = 0.8) {
             const angle = Math.atan2(targetY - eyeCenter.y, targetX - eyeCenter.x);
-            const maxDist = (eyeRect.width - 40) / 3; // 瞳孔直径40px
+            const maxDist = (eyeRect.width - 40) / 3;
             
-            // 限制移动距离
             const distance = Math.min(
                 maxDist,
                 Math.sqrt(Math.pow(targetX - eyeCenter.x, 2) + Math.pow(targetY - eyeCenter.y, 2)) / 10
@@ -154,21 +308,19 @@
             
             return {
                 x: Math.cos(angle) * distance,
-                y: Math.sin(angle) * distance * 0.8
+                y: Math.sin(angle) * distance * yMultiplier
             };
         }
         
-        // 同步随机移动
+        // 随机移动
         function randomMove() {
             if(isLookingAtClick) return;
             
-            // 生成随机目标点 (在屏幕中央区域)
-            const targetX = window.innerWidth/2 + (Math.random() - 0.5) * 300;
-            const targetY = window.innerHeight/2 + (Math.random() - 0.5) * 200;
+            const { maxX, maxY } = getMoveRange();
+            const targetX = window.innerWidth/2 + (Math.random() - 0.5) * maxX * 2;
+            const targetY = window.innerHeight/2 + (Math.random() - 0.5) * maxY * 2;
             
             moveEyesTo(targetX, targetY);
-            
-            // 设置下次移动时间 (2-4秒)
             movementTimeout = setTimeout(randomMove, 2000 + Math.random() * 2000);
         }
         
@@ -185,25 +337,16 @@
                 eye2.classList.remove('closed');
             }, 200);
             
-            // 下次眨眼时间 (3-6秒)
             setTimeout(blink, 3000 + Math.random() * 3000);
         }
         
         // 点击事件处理
         document.addEventListener('click', (e) => {
-            // 清除之前的随机移动
             clearTimeout(movementTimeout);
-            
-            // 显示点击效果
             showClickEffect(e.clientX, e.clientY);
-            
-            // 标记为注视状态
             isLookingAtClick = true;
-            
-            // 看向点击位置
             moveEyesTo(e.clientX, e.clientY);
             
-            // 2秒后恢复随机移动
             setTimeout(() => {
                 isLookingAtClick = false;
                 randomMove();
@@ -212,10 +355,10 @@
         
         // 初始化
         window.addEventListener('load', () => {
-            // 开始随机移动
-            randomMove();
+            // 设置键盘控制
+            setupKeyboardControls();
             
-            // 开始眨眼
+            randomMove();
             setTimeout(blink, 2000);
         });
     </script>
