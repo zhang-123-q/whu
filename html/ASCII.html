@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频转ASCII艺术对比工具</title>
+    <style>
+        :root {
+            --control-bg: rgba(0, 0, 0, 0.8);
+            --control-color: #fff;
+            --accent-color: #4CAF50;
+            --border-color: #333;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        #controls {
+            padding: 12px;
+            background: var(--control-bg);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+        }
+        
+        #main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #comparison-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .comparison-item {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+        
+        #original-video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        #ascii-display {
+            white-space: pre;
+            line-height: 1;
+            font-size: 6px;
+            letter-spacing: 0;
+            text-align: center;
+            overflow: auto;
+            max-width: 100%;
+            max-height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        #divider {
+            width: 8px;
+            background: var(--control-bg);
+            cursor: col-resize;
+            position: relative;
+            z-index: 10;
+        }
+        
+        #divider::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 2px;
+            right: 2px;
+            background: var(--border-color);
+        }
+        
+        button, select {
+            padding: 8px 12px;
+            background: #333;
+            color: var(--control-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #555;
+        }
+        
+        button.primary {
+            background: var(--accent-color);
+        }
+        
+        button.primary:hover {
+            background: #66BB6A;
+        }
+        
+        label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        
+        input[type="range"] {
+            width: 100px;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider-value {
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        #status {
+            margin-left: auto;
+            color: var(--accent-color);
+            padding: 0 8px;
+        }
+        
+        #fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: var(--control-bg);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        #fullscreen-btn:hover {
+            background: #555;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            #controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            #comparison-container {
+                flex-direction: column;
+            }
+            
+            .comparison-item {
+                height: 50%;
+            }
+            
+            #divider {
+                width: 100%;
+                height: 8px;
+                cursor: row-resize;
+            }
+            
+            #divider::before {
+                top: 2px;
+                bottom: 2px;
+                left: 0;
+                right: 0;
+            }
+            
+            #ascii-display {
+                font-size: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="controls">
+            <button id="load-btn" class="primary">选择视频</button>
+            <input type="file" id="video-input" accept="video/*" hidden>
+            
+            <div class="slider-container">
+                <span>宽度:</span>
+                <input type="range" id="width-slider" min="40" max="300" value="120">
+                <span id="width-value" class="slider-value">120</span>
+            </div>
+            
+            <div class="slider-container">
+                <span>对比度:</span>
+                <input type="range" id="contrast-slider" min="50" max="200" value="100">
+                <span id="contrast-value" class="slider-value">100</span>
+            </div>
+            
+            <div class="slider-container">
+                <span>亮度:</span>
+                <input type="range" id="brightness-slider" min="50" max="150" value="100">
+                <span id="brightness-value" class="slider-value">100</span>
+            </div>
+            
+            <select id="charset-select">
+                <option value="@%#*+=-:. ">标准字符集</option>
+                <option value="01">二进制(0-1)</option>
+                <option value=" .:-=+*#%@">反转字符集</option>
+                <option value="$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ">详细字符集</option>
+                <option value="█▓▒░ ">块状字符</option>
+                <option value="1234567890">数字</option>
+                <option value="ABCDEFGHIJKLMNOPQRSTUVWXYZ">字母</option>
+            </select>
+            
+            <button id="toggle-btn">暂停/播放</button>
+            <button id="compare-btn" class="primary">对比模式</button>
+            <span id="status">准备就绪</span>
+        </div>
+        
+        <div id="main-content">
+            <div id="comparison-container" class="hidden">
+                <div class="comparison-item">
+                    <video id="original-video"></video>
+                </div>
+                
+                <div id="divider"></div>
+                
+                <div class="comparison-item">
+                    <pre id="ascii-display"></pre>
+                </div>
+            </div>
+            
+            <div id="ascii-container">
+                <pre id="ascii-display-single">请选择视频文件开始转换</pre>
+            </div>
+            
+            <button id="fullscreen-btn" title="全屏">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const loadBtn = document.getElementById('load-btn');
+        const videoInput = document.getElementById('video-input');
+        const originalVideo = document.getElementById('original-video');
+        const asciiDisplay = document.getElementById('ascii-display');
+        const asciiDisplaySingle = document.getElementById('ascii-display-single');
+        const widthSlider = document.getElementById('width-slider');
+        const widthValue = document.getElementById('width-value');
+        const contrastSlider = document.getElementById('contrast-slider');
+        const contrastValue = document.getElementById('contrast-value');
+        const brightnessSlider = document.getElementById('brightness-slider');
+        const brightnessValue = document.getElementById('brightness-value');
+        const charsetSelect = document.getElementById('charset-select');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const compareBtn = document.getElementById('compare-btn');
+        const statusEl = document.getElementById('status');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const comparisonContainer = document.getElementById('comparison-container');
+        const asciiContainer = document.getElementById('ascii-container');
+        const divider = document.getElementById('divider');
+        
+        // 视频处理相关
+        const processingCanvas = document.createElement('canvas');
+        const processingCtx = processingCanvas.getContext('2d');
+        
+        // 状态变量
+        let currentCharset = "@%#*+=-:. ";
+        let isPlaying = false;
+        let isComparing = false;
+        let animationId = null;
+        let isRendering = false;
+        let lastRenderTime = 0;
+        const targetFPS = 24;
+        const frameInterval = 1000 / targetFPS;
+        
+        // 初始化
+        initEventListeners();
+        updateSliderValues();
+        
+        function initEventListeners() {
+            // 按钮事件
+            loadBtn.addEventListener('click', () => videoInput.click());
+            videoInput.addEventListener('change', handleVideoUpload);
+            toggleBtn.addEventListener('click', togglePlayback);
+            compareBtn.addEventListener('click', toggleCompareMode);
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+            
+            // 滑块事件
+            widthSlider.addEventListener('input', () => {
+                widthValue.textContent = widthSlider.value;
+            });
+            
+            contrastSlider.addEventListener('input', () => {
+                contrastValue.textContent = contrastSlider.value;
+            });
+            
+            brightnessSlider.addEventListener('input', () => {
+                brightnessValue.textContent = brightnessSlider.value;
+            });
+            
+            charsetSelect.addEventListener('change', () => {
+                currentCharset = charsetSelect.value;
+            });
+            
+            // 分割条拖动事件
+            let isDragging = false;
+            
+            divider.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                document.body.style.cursor = window.innerWidth > 768 ? 'col-resize' : 'row-resize';
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                if (window.innerWidth > 768) {
+                    // 横向分割
+                    const containerWidth = comparisonContainer.clientWidth;
+                    const newVideoWidth = e.clientX / containerWidth * 100;
+                    comparisonContainer.children[0].style.flex = `0 0 ${newVideoWidth}%`;
+                } else {
+                    // 纵向分割
+                    const containerHeight = comparisonContainer.clientHeight;
+                    const newVideoHeight = e.clientY / containerHeight * 100;
+                    comparisonContainer.children[0].style.flex = `0 0 ${newVideoHeight}%`;
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                document.body.style.cursor = '';
+            });
+        }
+        
+        function updateSliderValues() {
+            widthValue.textContent = widthSlider.value;
+            contrastValue.textContent = contrastSlider.value;
+            brightnessValue.textContent = brightnessSlider.value;
+        }
+        
+        function handleVideoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const videoURL = URL.createObjectURL(file);
+            originalVideo.src = videoURL;
+            
+            originalVideo.onloadedmetadata = () => {
+                statusEl.textContent = "加载中...";
+                
+                if (isPlaying) {
+                    cancelAnimationFrame(animationId);
+                }
+                
+                isPlaying = true;
+                originalVideo.play().then(() => {
+                    statusEl.textContent = "播放中";
+                    renderAscii();
+                }).catch(err => {
+                    statusEl.textContent = "错误: " + err.message;
+                });
+            };
+            
+            originalVideo.onerror = () => {
+                statusEl.textContent = "视频加载错误";
+            };
+        }
+        
+        function togglePlayback() {
+            if (originalVideo.paused || !originalVideo.src) {
+                if (!originalVideo.src) {
+                    statusEl.textContent = "请先选择视频";
+                    return;
+                }
+                
+                originalVideo.play().then(() => {
+                    isPlaying = true;
+                    statusEl.textContent = "播放中";
+                    renderAscii();
+                }).catch(err => {
+                    statusEl.textContent = "播放错误: " + err.message;
+                });
+            } else {
+                originalVideo.pause();
+                isPlaying = false;
+                statusEl.textContent = "已暂停";
+                cancelAnimationFrame(animationId);
+            }
+        }
+        
+        function toggleCompareMode() {
+            isComparing = !isComparing;
+            
+            if (isComparing) {
+                comparisonContainer.classList.remove('hidden');
+                asciiContainer.classList.add('hidden');
+                compareBtn.textContent = "单屏模式";
+                // 设置初始分割比例
+                comparisonContainer.children[0].style.flex = "0 0 50%";
+            } else {
+                comparisonContainer.classList.add('hidden');
+                asciiContainer.classList.remove('hidden');
+                compareBtn.textContent = "对比模式";
+            }
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`全屏错误: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+        
+        function renderAscii(timestamp) {
+            if (originalVideo.paused || originalVideo.ended) {
+                isPlaying = false;
+                statusEl.textContent = originalVideo.ended ? "播放结束" : "已暂停";
+                return;
+            }
+            
+            // 控制帧率
+            const now = performance.now();
+            const elapsed = now - lastRenderTime;
+            
+            if (elapsed < frameInterval) {
+                animationId = requestAnimationFrame(renderAscii);
+                return;
+            }
+            
+            lastRenderTime = now - (elapsed % frameInterval);
+            
+            // 如果正在渲染则跳过这一帧
+            if (isRendering) {
+                animationId = requestAnimationFrame(renderAscii);
+                return;
+            }
+            
+            isRendering = true;
+            
+            try {
+                const width = parseInt(widthSlider.value);
+                const contrast = parseInt(contrastSlider.value) / 100;
+                const brightness = parseInt(brightnessSlider.value) / 100;
+                
+                // 设置画布尺寸
+                const aspectRatio = originalVideo.videoHeight / originalVideo.videoWidth;
+                const height = Math.floor(width * aspectRatio * 0.5); // 0.5是字符的宽高比补偿
+                
+                processingCanvas.width = width;
+                processingCanvas.height = height;
+                
+                // 绘制视频帧到画布
+                processingCtx.drawImage(originalVideo, 0, 0, width, height);
+                
+                // 使用requestIdleCallback分块处理以避免阻塞UI
+                requestIdleCallback(() => {
+                    const imageData = processingCtx.getImageData(0, 0, width, height);
+                    const pixels = imageData.data;
+                    
+                    let asciiArt = '';
+                    for (let y = 0; y < height; y++) {
+                        let line = '';
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const r = pixels[index];
+                            const g = pixels[index + 1];
+                            const b = pixels[index + 2];
+                            
+                            // 计算灰度值并应用对比度和亮度
+                            let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                            gray = ((gray - 128) * contrast) + 128; // 对比度调整
+                            gray = gray * brightness; // 亮度调整
+                            gray = Math.max(0, Math.min(255, gray));
+                            
+                            // 映射到字符集
+                            const charIndex = Math.floor((gray / 255) * (currentCharset.length - 1));
+                            line += currentCharset[charIndex];
+                        }
+                        asciiArt += line + '\n';
+                    }
+                    
+                    // 更新显示
+                    if (isComparing) {
+                        asciiDisplay.textContent = asciiArt;
+                    } else {
+                        asciiDisplaySingle.textContent = asciiArt;
+                    }
+                    
+                    isRendering = false;
+                }, { timeout: 100 });
+                
+            } catch (err) {
+                console.error("渲染错误:", err);
+                statusEl.textContent = "渲染错误";
+                isRendering = false;
+            }
+            
+            animationId = requestAnimationFrame(renderAscii);
+        }
+    </script>
+</body>
+</html>
